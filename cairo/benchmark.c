@@ -9,20 +9,39 @@
 #include <math.h>
 
 void draw_eye(cairo_t * g, int x, int y, int r, double lid) {
-  cairo_move_to(g, 128.0, 25.6);
-  cairo_line_to(g, 230.4, 230.4);
-  cairo_rel_line_to(g, -102.4, 0.0);
-  cairo_curve_to(g, 51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
-  cairo_close_path(g);
-  cairo_move_to(g, 64.0, 25.6);
-  cairo_rel_line_to(g, 51.2, 51.2);
-  cairo_rel_line_to(g, -51.2, 51.2);
-  cairo_rel_line_to(g, -51.2, -51.2);
-  cairo_close_path(g);
-  cairo_set_line_width(g, 10.0);
-  cairo_set_source_rgb(g, 0, 0, 1);
-  cairo_fill_preserve(g);
+  // eye ball
+  cairo_set_source_rgb(g, .5, .5, .5);
+  cairo_arc(g, x, y, r, 0, M_PI * 2);
+  cairo_fill(g);
+  // eye pupil
+  int rp1 = r / 5;
+  int rp2 = r / 7;
+  cairo_set_source_rgb(g, .5, 0, 0);
+  cairo_arc(g, x, y, rp1, 0, M_PI * 2);
+  cairo_fill(g);
   cairo_set_source_rgb(g, 0, 0, 0);
+  cairo_arc(g, x, y, rp2, 0, M_PI * 2);
+  cairo_fill(g);
+  // eye lid
+  int h = (int)(2*r * lid);
+  cairo_save(g);
+  cairo_rectangle(g, x - r, y - r, r * 2, h);
+  cairo_clip(g);
+  cairo_set_source_rgb(g, 1, .89, .82);
+  cairo_arc(g, x, y, r, 0, M_PI * 2);
+  cairo_fill(g);
+  cairo_restore(g);
+  // eye outline
+  cairo_set_source_rgb(g, 0, 0, 0);
+  cairo_arc(g, x, y, r, 0, M_PI * 2);
+  // eye lid outline
+  int h2 = fabs(r-h);
+  int rl = (int)(sqrt(r*r - h2*h2));
+  cairo_move_to(g, x - rl, y - r + h);
+  cairo_line_to(g, x + rl, y - r + h);
+  cairo_close_path(g);
+  // eye lashes?
+  // commit outlines
   cairo_stroke(g);
 }
 
@@ -122,7 +141,7 @@ int main(int argc, char * argv[]) {
     }
 
     // cairo clear
-    cairo_set_source_rgb(g, 255, 255, 255);
+    cairo_set_source_rgb(g, 1, 1, 1);
     cairo_paint(g);
     // eye (animated, centered)
     double lid = t1 % 1000 / 1000.0;
