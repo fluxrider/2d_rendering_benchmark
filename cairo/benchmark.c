@@ -51,8 +51,19 @@ uint64_t currentTimeMillis() {
   return tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
 }
 
+void random_init() {
+  srand(time(NULL));
+}
+
+int random_inclusive(int low, int high) {
+  if(low == high) return low;
+  if(low > high) { printf("Error in random_inclusive. Low > High. %d %d\n", low, high); return low; }
+  return rand() % (high - low + 1) + low;
+}
+
 int main(int argc, char * argv[]) {
   printf("Begin\n");
+  random_init();
 
   // because of the way I handle cleanup, all resource must be initialized early.
   SDL_Window * window = NULL;
@@ -143,6 +154,16 @@ int main(int argc, char * argv[]) {
     // cairo clear
     cairo_set_source_rgb(g, 1, 1, 1);
     cairo_paint(g);
+    
+    // eyes (crazy random bg)
+    for(int i = 0; i < 1000; i++) {
+      int r = random_inclusive(0, fmin(H, W) / 5);
+      int x = random_inclusive(0, W + 2*r) - r;
+      int y = random_inclusive(0, H + 2*r) - r;
+      double lid = random_inclusive(0, 1000) / 1000.0;
+      draw_eye(g, x, y, r, lid);
+    }
+
     // eye (animated, centered)
     double lid = t1 % 1000 / 1000.0;
     if(lid < .5) {
