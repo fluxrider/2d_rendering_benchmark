@@ -1,11 +1,30 @@
 // Written by David Lareau
-// Compile: gcc benchmark.c `pkg-config --cflags --libs sdl2 cairo`
+// gcc benchmark.c `pkg-config --cflags --libs sdl2 cairo` -lm
 
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <cairo.h>
 #include <time.h>
 #include <inttypes.h>
+#include <math.h>
+
+void draw_eye(cairo_t * g, int x, int y, int r, double lid) {
+  cairo_move_to(g, 128.0, 25.6);
+  cairo_line_to(g, 230.4, 230.4);
+  cairo_rel_line_to(g, -102.4, 0.0);
+  cairo_curve_to(g, 51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
+  cairo_close_path(g);
+  cairo_move_to(g, 64.0, 25.6);
+  cairo_rel_line_to(g, 51.2, 51.2);
+  cairo_rel_line_to(g, -51.2, 51.2);
+  cairo_rel_line_to(g, -51.2, -51.2);
+  cairo_close_path(g);
+  cairo_set_line_width(g, 10.0);
+  cairo_set_source_rgb(g, 0, 0, 1);
+  cairo_fill_preserve(g);
+  cairo_set_source_rgb(g, 0, 0, 0);
+  cairo_stroke(g);
+}
 
 uint64_t currentTimeMillis() {
   struct timespec tp;
@@ -102,24 +121,18 @@ int main(int argc, char * argv[]) {
       }
     }
 
-    // draw
+    // cairo clear
     cairo_set_source_rgb(g, 255, 255, 255);
     cairo_paint(g);
-    cairo_move_to(g, 128.0, 25.6);
-    cairo_line_to(g, 230.4, 230.4);
-    cairo_rel_line_to(g, -102.4, 0.0);
-    cairo_curve_to(g, 51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
-    cairo_close_path(g);
-    cairo_move_to(g, 64.0, 25.6);
-    cairo_rel_line_to(g, 51.2, 51.2);
-    cairo_rel_line_to(g, -51.2, 51.2);
-    cairo_rel_line_to(g, -51.2, -51.2);
-    cairo_close_path(g);
-    cairo_set_line_width(g, 10.0);
-    cairo_set_source_rgb(g, 0, 0, 1);
-    cairo_fill_preserve(g);
-    cairo_set_source_rgb(g, 0, 0, 0);
-    cairo_stroke(g);
+    // eye (animated, centered)
+    double lid = t1 % 1000 / 1000.0;
+    if(lid < .5) {
+      lid *= 2;
+    } else {
+      lid = 1 - (lid - .5) * 2;
+    }
+    draw_eye(g, W / 2, H / 2, fmin(H, W) / 5, lid);
+    // cairo flush
     cairo_surface_flush(surface);
     if(SDL_UpdateTexture(texture, NULL, pixels, pitch)) {
       fprintf(stdout, "SDL_UpdateTexture: %s\n", SDL_GetError());
