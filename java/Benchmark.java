@@ -1,6 +1,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Random;
 
 public class Benchmark {
 
@@ -39,6 +40,7 @@ public class Benchmark {
     int H = 450;
     Object canvas = David.createCanvas(W, H, "Eyes", true, true);
     Graphics g = David.getGraphics(canvas);
+    Random rando = new Random();
 
     // game loop
     long t0 = System.currentTimeMillis();
@@ -54,7 +56,16 @@ public class Benchmark {
       frame_count++;
       System.out.println(frame_count + ": " + 1 / delta_time);
 
-      // eye
+      // eyes (crazy random bg)
+      for(int i = 0; i < 1000; i++) {
+        int r = rando.nextInt(Math.min(H, W) / 5);
+        int x = rando.nextInt(W + 2*r) - r;
+        int y = rando.nextInt(H + 2*r) - r;
+        double lid = Math.random();
+        draw_eye(g, x, y, r, lid);
+      }
+      
+      // eye (animated, centered)
       double lid = t1 % 1000 / 1000.0;
       if(lid < .5) {
         lid *= 2;
