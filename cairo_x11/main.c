@@ -1,9 +1,9 @@
-// gcc main.c -lcairo -lX11
+// gcc main.c -Wall $(pkg-config --libs --cflags cairo x11)
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <cairo/cairo.h>
-#include <cairo/cairo-xlib.h>
+#include <cairo.h>
+#include <cairo-xlib.h>
 
 #include <stdio.h>
 #include <stdlib.h>
