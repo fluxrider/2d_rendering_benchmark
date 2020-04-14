@@ -32,6 +32,8 @@ int main(int argc, char * argv[]) {
   // display
   int W = 800;
   int H = 450;
+  int w = W;
+  int h = H;
   window = SDL_CreateWindow("Eyes", 10, 10, W, H, SDL_WINDOW_RESIZABLE);
   if(!window) {
     fprintf(stdout, "SDL_CreateWindow: %s\n", SDL_GetError());
@@ -46,61 +48,30 @@ int main(int argc, char * argv[]) {
   SDL_RenderSetLogicalSize(renderer, W, H);
 
   // render cairo to dynamic texture
-  {
-    int w = 800;
-    int h = 450;
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
-    if(!texture) {
-      fprintf(stdout, "SDL_CreateTexture: %s\n", SDL_GetError());
-      goto end;
-    }
-    // enable alpha blending when drawing this offscreen texture somewhere
-    if(SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)) {
-      fprintf(stdout, "SDL_SetTextureBlendMode: %s\n", SDL_GetError());
-      goto end;
-    }
-
-    // start fully transparent
-    int pitch = w * 4;
-    void * pixels = malloc(pitch * h);
-    memset(pixels, 0x00, pitch * h);
-
-    cairo_surface_t * surface = cairo_image_surface_create_for_data (
-        pixels,
-        CAIRO_FORMAT_ARGB32,
-        w,
-        h,
-        pitch
-    );
-
-    cairo_t * g = cairo_create(surface);
-    cairo_move_to(g, 128.0, 25.6);
-    cairo_line_to(g, 230.4, 230.4);
-    cairo_rel_line_to(g, -102.4, 0.0);
-    cairo_curve_to(g, 51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
-    cairo_close_path(g);
-    cairo_move_to(g, 64.0, 25.6);
-    cairo_rel_line_to(g, 51.2, 51.2);
-    cairo_rel_line_to(g, -51.2, 51.2);
-    cairo_rel_line_to(g, -51.2, -51.2);
-    cairo_close_path(g);
-    cairo_set_line_width(g, 10.0);
-    cairo_set_source_rgb(g, 0, 0, 1);
-    cairo_fill_preserve(g);
-    cairo_set_source_rgb(g, 0, 0, 0);
-    cairo_stroke(g);
-    cairo_destroy(g);
-    cairo_surface_flush(surface);
-    cairo_surface_destroy(surface);
-
-    if(SDL_UpdateTexture(texture, NULL, pixels, pitch)) {
-      fprintf(stdout, "SDL_UpdateTexture: %s\n", SDL_GetError());
-      goto end;
-    }
-    free(pixels);
-
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+  if(!texture) {
+    fprintf(stdout, "SDL_CreateTexture: %s\n", SDL_GetError());
+    goto end;
+  }
+  // enable alpha blending when drawing this offscreen texture somewhere
+  if(SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)) {
+    fprintf(stdout, "SDL_SetTextureBlendMode: %s\n", SDL_GetError());
+    goto end;
   }
 
+  // start fully transparent
+  int pitch = w * 4;
+  void * pixels = malloc(pitch * h);
+  memset(pixels, 0x00, pitch * h);
+  cairo_surface_t * surface = cairo_image_surface_create_for_data (
+      pixels,
+      CAIRO_FORMAT_ARGB32,
+      w,
+      h,
+      pitch
+  );
+  cairo_t * g = cairo_create(surface);
+  
   // game loop
   int render = 1;
   int frame_count = 0;
@@ -131,6 +102,30 @@ int main(int argc, char * argv[]) {
       }
     }
 
+    // draw
+    cairo_set_source_rgb(g, 255, 255, 255);
+    cairo_paint(g);
+    cairo_move_to(g, 128.0, 25.6);
+    cairo_line_to(g, 230.4, 230.4);
+    cairo_rel_line_to(g, -102.4, 0.0);
+    cairo_curve_to(g, 51.2, 230.4, 51.2, 128.0, 128.0, 128.0);
+    cairo_close_path(g);
+    cairo_move_to(g, 64.0, 25.6);
+    cairo_rel_line_to(g, 51.2, 51.2);
+    cairo_rel_line_to(g, -51.2, 51.2);
+    cairo_rel_line_to(g, -51.2, -51.2);
+    cairo_close_path(g);
+    cairo_set_line_width(g, 10.0);
+    cairo_set_source_rgb(g, 0, 0, 1);
+    cairo_fill_preserve(g);
+    cairo_set_source_rgb(g, 0, 0, 0);
+    cairo_stroke(g);
+    cairo_surface_flush(surface);
+    if(SDL_UpdateTexture(texture, NULL, pixels, pitch)) {
+      fprintf(stdout, "SDL_UpdateTexture: %s\n", SDL_GetError());
+      goto end;
+    }
+
     // render scene
     if(render) {
       SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
@@ -145,6 +140,9 @@ int main(int argc, char * argv[]) {
     }
   }
 
+  cairo_destroy(g);
+  cairo_surface_destroy(surface);
+  free(pixels);
 
 end:
   // display
