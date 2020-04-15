@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Eye</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+// Determine best function for repaint()
+var repaintCanvas = (function(callback) {
+	return window.requestAnimationFrame || 
+	window.webkitRequestAnimationFrame || 
+	window.mozRequestAnimationFrame || 
+	window.oRequestAnimationFrame || 
+	window.msRequestAnimationFrame ||
+	function(callback) {
+	  window.setTimeout(callback, 1000 / 60);
+	};
+})();
+
+// Time
+function currentTimeMillis() {
+	var now = new Date();
+	return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds());
+}
+
+
+function draw_eye(g, x, y, r, lid) {
+  // eye ball
+  g.fillStyle = "#999999";
+  g.beginPath();
+  g.arc(x, y, r, 0, Math.PI * 2);
+  g.fill();
+  // eye pupil
+  var rp1 = r / 5;
+  var rp2 = r / 7;
+  g.fillStyle = "#FF0000";
+  g.beginPath();
+  g.arc(x, y, rp1, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = "#000000";
+  g.beginPath();
+  g.arc(x, y, rp2, 0, Math.PI * 2);
+  g.fill();
+  // eye lid
+  var h = 2*r * lid;
+  g.save();
+  g.beginPath();
+  g.rect(x - r, y - r, r * 2, h);
+  g.clip();
+  g.fillStyle = "#FFCCBB";
+  g.beginPath();
+  g.arc(x, y, r, 0, Math.PI * 2);
+  g.fill();
+  g.restore();
+  // eye outline
+  g.fillStyle = "#000000";
+  g.beginPath();
+  g.arc(x, y, r, 0, Math.PI * 2);
+  // eye lid outline
+  var h2 = Math.abs(r-h);
+  var rl = Math.sqrt(r*r - h2*h2);
+  g.moveTo(x - rl, y - r + h);
+  g.lineTo(x + rl, y - r + h);
+  g.stroke();
+  // eye lashes?
+}
+
+var t0 = 0;
+var frame_count = 0;
+function paintCanvas() {
+  if(t0 == 0) t0 =  currentTimeMillis();
+	var canvas = document.getElementById("canvas");
+	var W = canvas.width;
+	var H = canvas.height;
+	var g = canvas.getContext("2d");
+
+  // time flow
+  var t1 = currentTimeMillis();
+  var delta_time = (t1 - t0) / 1000.0;
+  t0 = t1;
+  // fps
+  frame_count++;
+  //printf("%d: %f\n", frame_count, 1 / delta_time);
+
+  // clear
+	g.clearRect(0, 0, W, H);
+
+/*  
+  // eyes (crazy random bg)
+  for(int i = 0; i < 1000; i++) {
+    int r = random_inclusive(0, fmin(H, W) / 5);
+    int x = random_inclusive(0, W + 2*r) - r;
+    int y = random_inclusive(0, H + 2*r) - r;
+    double lid = random_inclusive(0, 1000) / 1000.0;
+    draw_eye(g, x, y, r, lid);
+  }
+*/
+  // eye (animated, centered)
+  var lid = t1 % 1000 / 1000.0;
+  if(lid < .5) {
+    lid *= 2;
+  } else {
+    lid = 1 - (lid - .5) * 2;
+  }
+  draw_eye(g, W / 2, H / 2, Math.min(H, W) / 5, lid);
+
+  // repaint (continuous repaint)
+	repaintCanvas(function() { paintCanvas(); });
+}
+</script>
+</head>
+
+<body onload="repaintCanvas(function() { paintCanvas(); });">
+<canvas id="canvas" width="800" height="450" style="border:1px solid #000000;">
+</body>
+</html>
