@@ -1,5 +1,4 @@
-// https://stackoverflow.com/questions/33385243/cairo-c-program-wont-draw-to-x11-window
-// gcc dude.c -Wall $(pkg-config --libs --cflags cairo x11)
+// gcc benchmark_x11.c -Wall $(pkg-config --libs --cflags cairo x11) -lm
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -62,37 +61,19 @@ int random_inclusive(int low, int high) {
   return rand() % (high - low + 1) + low;
 }
 
-//This function should give us a new x11 surface to draw on.
-cairo_surface_t* create_x11_surface(Display *d, int x, int y)
-{
-    Drawable da;
-    int screen;
-    cairo_surface_t* sfc;
-
-    screen = DefaultScreen(d);
-    da = XCreateSimpleWindow(d, DefaultRootWindow(d), 0, 0, x, y, 0, 0, 0);
-    XSelectInput(d, da, ButtonPressMask | KeyPressMask);
-    XMapWindow(d, da);
-
-    sfc = cairo_xlib_surface_create(d, da, DefaultVisual(d, screen), x, y);
-
-    return sfc;
-}
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     random_init();
     int W = 800;
     int H = 450;
 
-    Display *d = XOpenDisplay(NULL);
-    if (d == NULL) {
-        fprintf(stderr, "Failed to open display\n");
-        return 1;
-    }
-    //create a new cairo surface in an x11 window as well as a cairo_t* to draw
-    //on the x11 window with.
-    cairo_surface_t* surface = create_x11_surface(d, W, H);
+    // https://stackoverflow.com/questions/33385243/cairo-c-program-wont-draw-to-x11-window
+    Display * display = XOpenDisplay(NULL);
+    if(display == NULL) { fprintf(stderr, "Failed to open display\n"); return 1; }
+    int screen = DefaultScreen(display);
+    Drawable drawable = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0, W, H, 0, 0, 0);
+    XSelectInput(display, drawable, ButtonPressMask | KeyPressMask);
+    XMapWindow(display, drawable);
+    cairo_surface_t* surface = cairo_xlib_surface_create(display, drawable, DefaultVisual(display, screen), W, H);
     cairo_t* g = cairo_create(surface);
 
     int frame_count = 0;
@@ -130,11 +111,9 @@ int main(int argc, char** argv)
         }
         draw_eye(g, W / 2, H / 2, fmin(H, W) / 5, lid);
 
-
         // flush
         cairo_surface_flush(surface);
-        XFlush(d);
-
+        XFlush(display);
     }
 
     // XXX: Lots of other stuff isn't properly destroyed here
