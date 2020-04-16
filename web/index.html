@@ -81,21 +81,20 @@ function paintCanvas() {
   t0 = t1;
   // fps
   frame_count++;
-  //printf("%d: %f\n", frame_count, 1 / delta_time);
+  console.log(frame_count + ": " + 1 / delta_time);
 
   // clear
 	g.clearRect(0, 0, W, H);
 
-/*  
   // eyes (crazy random bg)
-  for(int i = 0; i < 1000; i++) {
-    int r = random_inclusive(0, fmin(H, W) / 5);
-    int x = random_inclusive(0, W + 2*r) - r;
-    int y = random_inclusive(0, H + 2*r) - r;
-    double lid = random_inclusive(0, 1000) / 1000.0;
+  for(var i = 0; i < 1000; i++) {
+    var r = Math.round(Math.random() * (Math.min(H, W) / 5));
+    var x = Math.round(Math.random() * (W + 2*r) - r);
+    var y = Math.round(Math.random() * (H + 2*r) - r);
+    var lid = Math.random();
     draw_eye(g, x, y, r, lid);
   }
-*/
+
   // eye (animated, centered)
   var lid = t1 % 1000 / 1000.0;
   if(lid < .5) {
